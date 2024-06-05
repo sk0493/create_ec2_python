@@ -18,6 +18,7 @@ Although you can use Terraform or the AWS UI to create and manage EC2 instances,
 - Python can interact with many other APIs. 
 
 For example if you have an trading/investment website, you can track the stock price or market alerts. If certain tresholds are met you can use Python conditional statements to run a function that create EC2 instances automatically so that your website is ready for the high traffic.
+You could also deploy Python scripts as Lambda functions, for example a Python script that starts stopped EC2 instances, and use EventBridge to run the lambda function every hour.
 
 # Requirements
 
