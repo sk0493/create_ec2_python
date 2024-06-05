@@ -1,40 +1,53 @@
 import boto3
 import json
 
-# Set EC2 client
-ec2 = boto3.client('ec2')
+def load_config(file_path):
+    '''
+    Loads instance parameters from config file
+    '''
+    with open(file_path) as instance_parameters:
+        return json.load(instance_parameters)
 
-# Load instance parameters from config file
-with open('config.json') as instance_parameters:
-    config = json.load(instance_parameters)
-
-# Instance parameters
-image_id = config['image_id']
-instance_type = config['instance_type']
-key_name = config['key_name']
-security_group_ids = config['security_group_ids']
-
-# Launch EC2 instance
-response = ec2.run_instances(
-    ImageId=image_id, 
-    InstanceType=instance_type, 
-    KeyName=key_name, 
-    SecurityGroupIds = security_group_ids,
-    MinCount=1,
-    MaxCount=1
+def launch_instance(ec2, config):
+    '''
+    Launches EC2 instance based on parameters in config argument (json file)
+    '''
+    response = ec2.run_instances(
+        ImageId=config['image_id'], 
+        InstanceType=config['instance_type'], 
+        KeyName=config['key_name'], 
+        SecurityGroupIds=config['security_group_ids'],
+        MinCount=1,
+        MaxCount=1
     )
+    return response['Instances'][0]['InstanceId']
 
-# Get instance ID
-instance_id = response['Instances'][0]['InstanceId']
+def get_instance_info(ec2, instance_id):
+    '''
+    Wait for instance to be running then gathers information about the instance.
+    '''
+    ec2.get_waiter('instance_running').wait(InstanceIds=[instance_id])
 
-# Wait for instance to be running then execute next code
-ec2.get_waiter('instance_running').wait(InstanceIds=[instance_id])
+    instance = ec2.describe_instances(InstanceIds=[instance_id])
+    instance_info = instance['Reservations'][0]['Instances'][0]
+    instance_data = {
+        "Instance ID": instance_id,
+        "Private IP": instance_info.get('PrivateIpAddress'),
+        "Public IP": instance_info.get('PublicIpAddress')
+    }
+    return instance_data
 
-# Prints instance information
-instance = ec2.describe_instances(InstanceIds=[instance_id])
-instance_info = instance['Reservations'][0]['Instances'][0]
+def main():
+    # Set up EC2 client
+    ec2 = boto3.client('ec2')
 
-print(f"Instance ID: {instance_id}")
-print(f"Private IP: {instance_info.get('PrivateIpAddress')}")
-print(f"Public IP: {instance_info.get('PublicIpAddress')}")
+    config = load_config('config.json')
 
+    instance_id = launch_instance(ec2, config)
+    
+    # Output instance information
+    instance_data = get_instance_info(ec2, instance_id)
+    print(instance_data)
+
+if __name__ == "__main__":
+    main()

@@ -1,6 +1,9 @@
 # Introduction
 
-Python script that uses the boto3 library to launch a EC2 instance. A separate json config file contains the parameters of the ec2 instances to be created.
+Python script that uses the boto3 library to launch a EC2 instance. 
+
+- A separate json config file contains the parameters of the ec2 instances to be created.
+- Script is modularised into multiple functions for the different parts of the ec2 creation process.
 
 boto3 documentation:
 https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
